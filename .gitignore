@@ -1,0 +1,263 @@
+# Ignorar arquivos temporários
+*.tmp
+*.cache
+
+# Ignorar arquivos compactados
+*.zip
+*.rar
+*.7z
+*.bz2
+*.gz
+*.tar
+*.wim
+*.xz
+
+# Ignorar arquivos específicos
+config.json
+
+# Ignorar tudo dentro da pasta dist
+dist/
+
+# Exceto um arquivo específico
+!dist/keep.txt
+
+# Ignorar recursivamente
+**/bin/
+
+# VSCode
+.vscode/
+
+
+
+# =========================
+# ENV / SEGREDOS
+# =========================
+.env
+.env.*
+!.env.example
+
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+*.csr
+secrets/
+credentials/
+
+# =========================
+# LOGS
+# =========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# =========================
+# CACHE
+# =========================
+.cache/
+tmp/
+temp/
+.tmp/
+*.tmp
+
+# =========================
+# NODE / WEB
+# =========================
+node_modules/
+dist/
+build/
+coverage/
+
+.next/
+.nuxt/
+.svelte-kit/
+
+# =========================
+# BUILD / DIST
+# =========================
+vendor/
+dist/
+build/
+out/
+.next/
+.nuxt/
+.svelte-kit/
+coverage/
+
+# =========================
+# PYTHON
+# =========================
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# =========================
+# PHP / LARAVEL
+# =========================
+vendor/
+storage/*.key
+bootstrap/cache/
+
+# =========================
+# DATABASES LOCAIS
+# =========================
+*.sqlite
+*.sqlite3
+*.db
+
+# =========================================================
+# IDES / EDITORES
+# =========================================================
+
+# VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+
+# Cursor
+.cursor/
+.cursor-cache/
+.cursor-tutor/
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Notepad++
+*.bak
+
+# JetBrains
+.idea/
+
+# Vim
+*.swp
+*.swo
+
+
+# =========================================================
+# IA / AGENTES / VIBE CODING
+# =========================================================
+
+# Claude Code
+.claude/
+claude-project/
+claude-cache/
+.claude-cache/
+
+# OpenAI Codex
+.codex/
+.codex-cache/
+codex_logs/
+
+# OpenCode
+.opencode/
+.opencode-cache/
+
+# Aider
+.aider*
+.aider.chat.history.md
+
+# Continue.dev
+.continue/
+
+# Cline
+.cline/
+
+# Roo Code
+.roo/
+
+# Windsurf
+.windsurf/
+
+# Copilot temporários
+.github/copilot/
+copilot/
+
+# Memórias locais de IA
+ai-memory/
+prompts/private/
+conversation-history/
+
+# =========================================================
+# MCP / AGENT TOOLS
+# =========================================================
+.mcp/
+mcp-logs/
+mcp-cache/
+
+# =========================================================
+# ARQUIVOS SENSÍVEIS DE AUTOMAÇÃO
+# =========================================================
+playwright/.auth/
+auth.json
+session.json
+cookies.json
+
+# =========================
+# SISTEMA OPERACIONAL
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# DOCKER
+# =========================
+docker-data/
+*.tar
+
+# =========================
+# TESTES / RELATÓRIOS
+# =========================
+coverage/
+reports/
+
+# =========================================================
+# BACKUPS
+# =========================================================
+*.backup
+*.old
+*.orig
+*.rej
+*.bkp
+*.bak
+*.backup
+
+# =========================
+# CLOUD / DEVOPS
+# =========================
+terraform.tfstate
+terraform.tfstate.*
+.terraform/
+
+# =========================
+# CERTIFICADOS HTTPS
+# =========================
+certs/
+ssl/
+
+# =========================
+# ATALHOS WINDOWS
+# =========================
+*.lnk
+
+# =========================
+# ATALHOS / LINKS LINUX
+# =========================
+*.desktop
+
+# =========================
+# LINKS MACOS
+# =========================
+*.alias
+
+# =========================
+# LINKS SIMBÓLICOS GERADOS
+# =========================
+symlink/
+links/
+shortcuts/
