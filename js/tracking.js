@@ -22,19 +22,6 @@ n[o].q=n[o].q||[];n[o].q.push([this, parms])};} })
 window.naveggReady = window.naveggReady||[];
 window.nvg65136 = new Navegg({ acc: 65136 });
 
-// Matomo Tag
-var _paq = window._paq || [];
-/* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-_paq.push(['trackPageView']);
-_paq.push(['enableLinkTracking']);
-(function() {
-var u="https://lorduakiti.matomo.cloud/";
-_paq.push(['setTrackerUrl', u+'matomo.php']);
-_paq.push(['setSiteId', '1']);
-var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-g.type='text/javascript'; g.async=true; g.defer=true; g.src='//cdn.matomo.cloud/lorduakiti.matomo.cloud/matomo.js'; s.parentNode.insertBefore(g,s);
-})();
-
 
 // Data Dog Traker (horariomundial.lorduakiti.com.br)
 (function(h,o,u,n,d) {
@@ -91,3 +78,28 @@ Countly.q.push(['collect_from_forms']);
    cly.onload = function(){Countly.init()};
    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(cly, s);
 })();
+
+
+
+// Matomo Tag
+// var _paq = window._paq || [];
+// /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+// _paq.push(['trackPageView']);
+// _paq.push(['enableLinkTracking']);
+// (function() {
+// var u="https://lorduakiti.matomo.cloud/";
+// _paq.push(['setTrackerUrl', u+'matomo.php']);
+// _paq.push(['setSiteId', '1']);
+// var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+// g.type='text/javascript'; g.async=true; g.defer=true; g.src='//cdn.matomo.cloud/lorduakiti.matomo.cloud/matomo.js'; s.parentNode.insertBefore(g,s);
+// })();
+
+
+// Lomadee
+// var lmdimgpixel=document.createElement('img');
+// lmdimgpixel.src='//secure.lomadee.com/pub.png?pid=23024678';
+// lmdimgpixel.id='lmd-verification-pixel-23024678';
+// lmdimgpixel.style='display:none';
+
+// var elmt = document.getElementsByTagName('body')[0];
+// elmt.appendChild(lmdimgpixel);
