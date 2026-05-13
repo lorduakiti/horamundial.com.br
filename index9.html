@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<meta http-equiv="Content-Type" content="text/html;" />
+	<meta http-equiv="Content-Language" content="pt-br">
+	<meta charset="UTF-8">
+	<meta name="viewport" 	  content="width=device-width, initial-scale=1.0">
+	<meta name="description"  content="Horário Mundial, Data, Alarme, Fuso Horário e Estações do Ano">
+	<meta name="author" 	    content="Wanessa Flores">
+
+	<title>Bem Vindo ao Horário Mundial</title>
+
+	<link rel="shortcut icon" href="favicon.ico" />
+
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-139980187-2"></script>
+
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag(){dataLayer.push(arguments);}
+		gtag('js', new Date());
+
+		gtag('config', 'UA-139980187-2');
+	</script>
+
+
+	<!-- Google Tag Manager -->
+	<script>
+		(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+		new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+		j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+		'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+		})(window,document,'script','dataLayer','GTM-TTGMQ5Q');
+	</script>
+	<!-- End Google Tag Manager -->
+
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+
+	<script src="https://code.jquery.com/jquery-1.11.2.js"></script>
+	<script type="text/javascript">
+		jQuery(window).load(function($){
+			atualizaRelogio();
+		});
+	</script>
+
+	<!-- Google AdSense -->
+	<script data-ad-client="ca-pub-0817553170749888" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: radial-gradient(ellipse at 50% 50%, #050a20 0%, #000308 70%, #000 100%);
+    }
+    canvas { display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
+    #bg { z-index: 1; }
+    #gl { z-index: 2; }
+
+    #hud {
+      position: fixed;
+      inset: 0;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    #clock-box {
+      text-align: center;
+      padding: 22px 44px;
+      border-radius: 20px;
+      background: rgba(0, 8, 20, 0.30);
+      backdrop-filter: blur(10px) saturate(1.5);
+      border: 1px solid rgba(100, 180, 255, 0.22);
+      box-shadow:
+        0 0 60px rgba(40, 110, 255, 0.12),
+        inset 0 0 30px rgba(40, 110, 255, 0.06);
+    }
+
+    #time {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: clamp(2.4rem, 6.5vw, 5.5rem);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #e8f4ff;
+      text-shadow:
+        0 0  8px rgba(110, 200, 255, 1.0),
+        0 0 22px rgba( 80, 170, 255, 0.8),
+        0 0 55px rgba( 50, 140, 255, 0.5),
+        0 0 95px rgba( 30, 100, 255, 0.3);
+    }
+
+    #date {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: clamp(0.72rem, 1.7vw, 1.02rem);
+      color: rgba(160, 215, 255, 0.82);
+      margin-top: 8px;
+      text-shadow: 0 0 14px rgba(100, 200, 255, 0.5);
+      letter-spacing: 0.05em;
+    }
+
+    #timezone {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: clamp(0.62rem, 1.3vw, 0.84rem);
+      color: rgba(110, 175, 235, 0.62);
+      margin-top: 5px;
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+        <!-- Google Tag Manager (noscript) -->
+        <noscript>
+            <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TTGMQ5Q"  height="0" width="0" style="display:none;visibility:hidden"></iframe>
+        </noscript>
+        <!-- End Google Tag Manager (noscript) -->
+
+<canvas id="bg"></canvas>
+<canvas id="gl"></canvas>
+
+<div id="hud">
+  <div id="clock-box">
+    <div id="time">00:00:00</div>
+    <div id="date">—</div>
+    <div id="timezone">—</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ─────────────────────────────────────────────────────────────────
+  //  configuration
+  // ─────────────────────────────────────────────────────────────────
+  const TEX_W      = 2048;
+  const TEX_H      = 1024;
+  const ROT_SPEED  = 0.000065625; // radians per ms (~ 96 s per rotation)
+  const AXIAL_TILT = 23.5 * Math.PI / 180; // inclinação axial real da Terra
+  const STAR_COUNT = 320;
+  const FOV_V      = 35 * Math.PI / 180;
+  const FIT_MARGIN = 1.15;     // padding factor so sphere never clips edges
+
+  // ─────────────────────────────────────────────────────────────────
+  //  earth surface texture (NASA Blue Marble Next Generation,
+  //  equirectangular 2048×1024 JPEG, public domain — embutida abaixo
+  //  como data URI para preservar o padrão single-file).
+  // ─────────────────────────────────────────────────────────────────
+  const EARTH_TEXTURE_URL = './img/earth.jpg';
+  const EARTH_NIGHT_URL   = './img/earth_night.jpg';
+
+  const WEEKDAYS = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira',
+                    'Quinta-feira','Sexta-feira','Sábado'];
+  const MONTHS   = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                    'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+  // ─────────────────────────────────────────────────────────────────
+  //  v4: dados de polígono de continentes/ilhas removidos —
+  //  a superfície da Terra agora vem da foto NASA Blue Marble
+  //  carregada externamente via earth.jpg (EARTH_TEXTURE_URL). A esfera é
+  //  texturizada via Image() + texImage2D após o decode assíncrono.
+  // ─────────────────────────────────────────────────────────────────
+
+  // ─────────────────────────────────────────────────────────────────
+  //  starfield (background canvas, drawn once)
+  // ─────────────────────────────────────────────────────────────────
+  const bgCanvas = document.getElementById('bg');
+  const bgCtx    = bgCanvas.getContext('2d');
+  const STAR_PERIOD_MS = 5 * 60 * 1000;  // 5 min for full traversal
+
+  const STARS = Array.from({ length: STAR_COUNT }, () => ({
+    fx: Math.random(), fy: Math.random(),
+    r:  Math.random() * 1.5 + 0.2,
+    a:  Math.random() * 0.7 + 0.15
+  }));
+
+  function drawStars(t) {
+    const W = bgCanvas.width, H = bgCanvas.height;
+    const offset = (t / STAR_PERIOD_MS) % 1;   // [0..1) traversal phase
+    bgCtx.clearRect(0, 0, W, H);
+    STARS.forEach(({ fx, fy, r, a }) => {
+      // shift right-to-left, wrap on screen edges
+      let u = fx - offset;
+      u = u - Math.floor(u);
+      bgCtx.beginPath();
+      bgCtx.arc(u * W, fy * H, r, 0, Math.PI * 2);
+      bgCtx.fillStyle = `rgba(220,235,255,${a})`;
+      bgCtx.fill();
+    });
+  }
+
+
+  // ─────────────────────────────────────────────────────────────────
+  //  4×4 matrix utilities (column-major)
+  // ─────────────────────────────────────────────────────────────────
+  const M4 = {
+    ident: () => new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]),
+
+    persp: (fov, aspect, n, f) => {
+      const t = 1 / Math.tan(fov / 2);
+      const nf = 1 / (n - f);
+      return new Float32Array([
+        t/aspect, 0,    0,             0,
+        0,        t,    0,             0,
+        0,        0,    (f+n)*nf,     -1,
+        0,        0,    2*f*n*nf,      0
+      ]);
+    },
+
+    mul: (a, b) => {
+      const o = new Float32Array(16);
+      for (let j = 0; j < 4; j++) {
+        for (let i = 0; i < 4; i++) {
+          let s = 0;
+          for (let k = 0; k < 4; k++) s += a[k*4+i] * b[j*4+k];
+          o[j*4+i] = s;
+        }
+      }
+      return o;
+    },
+
+    trans: (x, y, z) => new Float32Array([
+      1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1
+    ]),
+
+    rotY: (a) => {
+      const c = Math.cos(a), s = Math.sin(a);
+      return new Float32Array([c,0,-s,0, 0,1,0,0, s,0,c,0, 0,0,0,1]);
+    },
+
+    rotX: (a) => {
+      const c = Math.cos(a), s = Math.sin(a);
+      return new Float32Array([1,0,0,0, 0,c,s,0, 0,-s,c,0, 0,0,0,1]);
+    },
+
+    rotZ: (a) => {
+      const c = Math.cos(a), s = Math.sin(a);
+      return new Float32Array([c,s,0,0, -s,c,0,0, 0,0,1,0, 0,0,0,1]);
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────────
+  //  sphere geometry (positions, normals, uvs, indices)
+  // ─────────────────────────────────────────────────────────────────
+  // achatamento polar WGS84: 1/298.257223563 ≈ 0.003353 (≈ 0.335%)
+  // → razão raio polar / raio equatorial = 1 - f ≈ 0.99664
+  const EARTH_FLATTENING = 1 / 298.257223563;
+
+  function makeSphere(r, lonSegs, latSegs, flattening) {
+    flattening = flattening || 0;
+    const polarFactor = 1 - flattening;          // b/a (raio polar / equatorial)
+    const polarFactorSq = polarFactor * polarFactor;
+    const positions = [], normals = [], uvs = [], indices = [];
+    for (let i = 0; i <= latSegs; i++) {
+      const v   = i / latSegs;
+      const lat = Math.PI * (v - 0.5);  // -π/2 .. π/2
+      const sLat = Math.sin(lat), cLat = Math.cos(lat);
+      for (let j = 0; j <= lonSegs; j++) {
+        const u   = j / lonSegs;
+        const lon = 2 * Math.PI * (u - 0.5);  // -π .. π
+        const sLon = Math.sin(lon), cLon = Math.cos(lon);
+        // convenção padrão: lon=0 (Greenwich) no eixo +Z (frente da câmera);
+        // leste cresce para +X (direita da tela). Mesma orientação usada em
+        // Three.js SphereGeometry, WebGL Earth e Cesium.
+        const x = cLat * sLon, y = sLat, z = cLat * cLon;
+        // posição: Y (eixo polar) escalado por polarFactor → elipsoide oblato
+        positions.push(r*x, r*y*polarFactor, r*z);
+        // normal correta para elipsoide x² + z² + y²/polarFactor² = 1
+        // gradiente ∝ (x, y/polarFactor², z), normalizado em seguida
+        const ny = y / polarFactorSq;
+        const invLen = 1 / Math.sqrt(x*x + ny*ny + z*z);
+        normals.push(x*invLen, ny*invLen, z*invLen);
+        uvs.push(u, 1 - v);
+      }
+    }
+    for (let i = 0; i < latSegs; i++) {
+      for (let j = 0; j < lonSegs; j++) {
+        const a = i * (lonSegs + 1) + j;
+        const b = a + lonSegs + 1;
+        // winding revertido para compensar o sentido de varredura
+        // longitudinal das fórmulas (sLon, cLon): com a varredura invertida,
+        // o CCW original ficaria voltado para dentro da esfera; reversão
+        // mantém o lado externo como front face (CCW) → cullFace(BACK) ok.
+        indices.push(a, a + 1, b);
+        indices.push(b, a + 1, b + 1);
+      }
+    }
+    return { positions, normals, uvs, indices };
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  //  shaders
+  // ─────────────────────────────────────────────────────────────────
+  const VS_SRC = `
+    attribute vec3 aPos;
+    attribute vec3 aNormal;
+    attribute vec2 aUV;
+
+    uniform mat4 uMV;
+    uniform mat4 uProj;
+
+    varying vec3 vNormal;
+    varying vec3 vViewPos;
+    varying vec2 vUV;
+    varying vec3 vNormalGeo;  // normal em coords geográficas (model-space)
+
+    void main () {
+      vec4 viewPos = uMV * vec4(aPos, 1.0);
+      vViewPos = viewPos.xyz;
+      vNormal  = (uMV * vec4(aNormal, 0.0)).xyz;
+      vNormalGeo = aNormal;   // preserva model-space para cálculo do sol UTC
+      vUV      = aUV;
+      gl_Position = uProj * viewPos;
+    }
+  `;
+
+  const FS_SRC = `
+    precision mediump float;
+
+    varying vec3 vNormal;
+    varying vec3 vViewPos;
+    varying vec2 vUV;
+    varying vec3 vNormalGeo;
+
+    uniform sampler2D uTex;
+    uniform sampler2D uTexNight;  // NASA Black Marble (luzes urbanas)
+    uniform vec3  uSunDirGeo;     // direção do sol em coords geográficas (UTC)
+    uniform float uTzLon;       // user's timezone center longitude (radians, world)
+    uniform float uTzHalfWidth; // half-band width (radians)
+    uniform float uTime;
+    uniform float uYearPhase;   // 0..1, full year cycle (1 real min = 1 year)
+
+    const float PI  = 3.1415926535;
+    const float TAU = 6.2831853;
+
+    void main () {
+      vec3 N = normalize(vNormal);
+      vec3 V = normalize(-vViewPos);
+
+      vec4 base = texture2D(uTex, vUV);
+
+      // ── v4 seasonal modulation: latitude-only (no biome heuristic) ──
+      //   trópicos e oceanos ficam intocados (fiéis à foto NASA);
+      //   altas latitudes recebem leve boost/queda de luminância e
+      //   um pulso de calota polar conforme a estação local.
+      float latDeg       = (0.5 - vUV.y) * 180.0;
+      float yearAngle    = uYearPhase * TAU;
+      float nhSeason     = sin(yearAngle);
+      float seasonFactor = nhSeason * sign(latDeg);
+
+      // luminância sazonal sutil em |lat| > 40°
+      float modStrength  = smoothstep(40.0, 70.0, abs(latDeg));
+      base.rgb *= 1.0 + 0.05 * seasonFactor * modStrength;
+
+      // pulso de calota polar: linha de neve oscila entre 65° (verão local)
+      // e 55° (inverno local); até 55% de branco sobreposto à foto.
+      float capLineDeg   = mix(55.0, 65.0,
+                               clamp(seasonFactor * 0.5 + 0.5, 0.0, 1.0));
+      float capAmount    = smoothstep(capLineDeg, capLineDeg + 8.0, abs(latDeg));
+      base.rgb = mix(base.rgb, vec3(0.96, 0.97, 0.99), capAmount * 0.55);
+      // longitude in radians from the texture's u coord (-PI .. PI)
+      float lon = (vUV.x - 0.5) * TAU;
+      float diff = lon - uTzLon;
+      diff = mod(diff + PI, TAU) - PI;
+      float ad = abs(diff);
+
+      // timezone band overlay
+      float band = 1.0 - smoothstep(uTzHalfWidth - 0.020, uTzHalfWidth, ad);
+      base.rgb = mix(base.rgb, vec3(1.0, 0.85, 0.30), band * 0.32);
+
+      // pulsing center meridian
+      float pulse = 0.55 + 0.45 * sin(uTime * 0.0025);
+      float lineW = 0.006;
+      float line = 1.0 - smoothstep(lineW - 0.002, lineW, ad);
+      base.rgb = mix(base.rgb, vec3(1.0, 0.95, 0.50), line * 0.85 * pulse);
+
+      // ── dia/noite ancorado ao tempo UTC real ─────────────────────
+      // dot product em coords geográficas: independe da rotação visual.
+      // +1 = sol no zênite, 0 = terminator (crepúsculo), -1 = antípoda.
+      vec3 Ngeo = normalize(vNormalGeo);
+      vec3 Sgeo = normalize(uSunDirGeo);
+      float sunDot = dot(Ngeo, Sgeo);
+
+      // transição suave do terminator (~17° de cada lado da linha)
+      float dayWeight = smoothstep(-0.15, 0.15, sunDot);
+
+      // textura noturna: NASA Black Marble (luzes urbanas)
+      vec4 nightTex = texture2D(uTexNight, vUV);
+
+      // mistura: dia mostra base.rgb iluminada; noite mostra Black Marble
+      vec3 daySide   = base.rgb * (0.20 + 0.85 * max(sunDot, 0.0));
+      vec3 nightSide = nightTex.rgb * 1.4;
+      vec3 color     = mix(nightSide, daySide, dayWeight);
+
+      // tinta crepuscular: pico em dayWeight=0.5 (terminator)
+      float duskAmount = 1.0 - abs(2.0 * dayWeight - 1.0);
+      color += vec3(1.0, 0.45, 0.18) * duskAmount * 0.20;
+
+      // Fresnel atmosphere rim glow
+      float fres = 1.0 - max(dot(N, V), 0.0);
+      fres = pow(fres, 2.8);
+      color += vec3(0.30, 0.55, 1.00) * fres * 0.65;
+
+      gl_FragColor = vec4(color, 1.0);
+    }
+  `;
+
+  // ─────────────────────────────────────────────────────────────────
+  //  WebGL helpers
+  // ─────────────────────────────────────────────────────────────────
+  function compile(gl, type, src) {
+    const sh = gl.createShader(type);
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+      console.error('shader compile error:', gl.getShaderInfoLog(sh));
+      return null;
+    }
+    return sh;
+  }
+
+  function link(gl, vs, fs) {
+    const p = gl.createProgram();
+    gl.attachShader(p, vs);
+    gl.attachShader(p, fs);
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+      console.error('program link error:', gl.getProgramInfoLog(p));
+      return null;
+    }
+    return p;
+  }
+
+  function buf(gl, data, target) {
+    const b = gl.createBuffer();
+    gl.bindBuffer(target, b);
+    gl.bufferData(target, data, gl.STATIC_DRAW);
+    return b;
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  //  initialise WebGL
+  // ─────────────────────────────────────────────────────────────────
+  const glCanvas = document.getElementById('gl');
+  const gl = glCanvas.getContext('webgl', { antialias: true, alpha: true })
+          || glCanvas.getContext('experimental-webgl', { antialias: true, alpha: true });
+
+  if (!gl) {
+    document.body.innerHTML =
+      '<div style="color:#fff;font-family:monospace;padding:30px">WebGL não suportado neste navegador.</div>';
+    return;
+  }
+
+  gl.clearColor(0, 0, 0, 0);
+  gl.enable(gl.DEPTH_TEST);
+  gl.enable(gl.CULL_FACE);
+  gl.cullFace(gl.BACK);
+
+  // shader program
+  const vs   = compile(gl, gl.VERTEX_SHADER,   VS_SRC);
+  const fs   = compile(gl, gl.FRAGMENT_SHADER, FS_SRC);
+  const prog = link(gl, vs, fs);
+  gl.useProgram(prog);
+
+  const aPos    = gl.getAttribLocation(prog, 'aPos');
+  const aNormal = gl.getAttribLocation(prog, 'aNormal');
+  const aUV     = gl.getAttribLocation(prog, 'aUV');
+
+  const uMV          = gl.getUniformLocation(prog, 'uMV');
+  const uProj        = gl.getUniformLocation(prog, 'uProj');
+  const uTex         = gl.getUniformLocation(prog, 'uTex');
+  const uTexNight    = gl.getUniformLocation(prog, 'uTexNight');
+  const uSunDirGeo   = gl.getUniformLocation(prog, 'uSunDirGeo');
+  const uTzLon       = gl.getUniformLocation(prog, 'uTzLon');
+  const uTzHalfWidth = gl.getUniformLocation(prog, 'uTzHalfWidth');
+  const uTime        = gl.getUniformLocation(prog, 'uTime');
+  const uYearPhase   = gl.getUniformLocation(prog, 'uYearPhase');
+
+  // sphere
+  const sphere = makeSphere(1.0, 96, 48, EARTH_FLATTENING);
+  const posBuf = buf(gl, new Float32Array(sphere.positions), gl.ARRAY_BUFFER);
+  const nrmBuf = buf(gl, new Float32Array(sphere.normals),   gl.ARRAY_BUFFER);
+  const uvBuf  = buf(gl, new Float32Array(sphere.uvs),       gl.ARRAY_BUFFER);
+  const idxBuf = buf(gl, new Uint16Array(sphere.indices),    gl.ELEMENT_ARRAY_BUFFER);
+  const idxLen = sphere.indices.length;
+
+  // texture — placeholder 1×1 navy until JPEG decodes, then async upload
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+                new Uint8Array([10, 31, 58, 255]));
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  // earth.jpg é POT (2048×1024) → REPEAT em S permite costura suave no
+  // antimeridiano; T fica CLAMP porque a textura termina nos polos.
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,     gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,     gl.CLAMP_TO_EDGE);
+
+  const earthImg = new Image();
+  earthImg.onload = () => {
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, earthImg);
+    // POT → mipmap chain completa + filtragem trilinear (nível + textel)
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    // anisotropia: melhora nitidez em ângulos rasantes (limbo da esfera,
+    // polos vistos de lado durante a rotação) sem custo perceptível
+    const aniso = gl.getExtension('EXT_texture_filter_anisotropic') ||
+                  gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') ||
+                  gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
+    if (aniso) {
+      const max = gl.getParameter(aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+      gl.texParameterf(gl.TEXTURE_2D, aniso.TEXTURE_MAX_ANISOTROPY_EXT,
+                       Math.min(8, max));
+    }
+  };
+  earthImg.src = EARTH_TEXTURE_URL;
+
+  // ── textura noturna (NASA Black Marble) na unit 1 ────────────────
+  const texNight = gl.createTexture();
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, texNight);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+                new Uint8Array([0, 0, 0, 255]));   // placeholder preto
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,     gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,     gl.CLAMP_TO_EDGE);
+
+  const earthNightImg = new Image();
+  earthNightImg.onload = () => {
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, texNight);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, earthNightImg);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    const aniso = gl.getExtension('EXT_texture_filter_anisotropic') ||
+                  gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') ||
+                  gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
+    if (aniso) {
+      const max = gl.getParameter(aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+      gl.texParameterf(gl.TEXTURE_2D, aniso.TEXTURE_MAX_ANISOTROPY_EXT,
+                       Math.min(8, max));
+    }
+  };
+  earthNightImg.src = EARTH_NIGHT_URL;
+
+  // ─────────────────────────────────────────────────────────────────
+  //  resize handling (with HiDPI)
+  // ─────────────────────────────────────────────────────────────────
+  function onResize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const cssW = window.innerWidth, cssH = window.innerHeight;
+
+    glCanvas.width  = Math.floor(cssW * dpr);
+    glCanvas.height = Math.floor(cssH * dpr);
+    bgCanvas.width  = Math.floor(cssW * dpr);
+    bgCanvas.height = Math.floor(cssH * dpr);
+
+    gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+  }
+  window.addEventListener('resize', onResize);
+  onResize();
+
+  // ─────────────────────────────────────────────────────────────────
+  //  render loop
+  // ─────────────────────────────────────────────────────────────────
+  const tzOffsetHr = -new Date().getTimezoneOffset() / 60;
+  const tzLonRad   = tzOffsetHr * 15 * Math.PI / 180;
+  const tzHalfRad  = 7.5 * Math.PI / 180;     // half-width of one timezone
+  const YEAR_PERIOD_MS = 60 * 1000;           // 1 real minute = 1 simulated year
+
+  let startT = performance.now();
+  let lastT  = startT;
+
+  function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = now - lastT;
+    lastT = now;
+
+    drawStars(now);
+
+    const aspect = glCanvas.width / glCanvas.height;
+    const proj   = M4.persp(FOV_V, aspect, 0.1, 100);
+
+    // responsive camera distance: ensure full sphere fits both axes
+    const halfFovV = FOV_V / 2;
+    const halfFovH = Math.atan(aspect * Math.tan(halfFovV));
+    const dist     = FIT_MARGIN / Math.sin(Math.min(halfFovV, halfFovH));
+
+    // model-view: spin → tilt → push back
+    const angle = (now - startT) * ROT_SPEED;
+    let mv = M4.trans(0, 0, -dist);
+    mv = M4.mul(mv, M4.rotZ(AXIAL_TILT));
+    mv = M4.mul(mv, M4.rotY(angle));
+
+    // seasonal phase: 1 real minute = 1 simulated year
+    const yearPhase = ((now - startT) % YEAR_PERIOD_MS) / YEAR_PERIOD_MS;
+
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.useProgram(prog);
+
+    // attributes
+    gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
+    gl.enableVertexAttribArray(aPos);
+    gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, nrmBuf);
+    gl.enableVertexAttribArray(aNormal);
+    gl.vertexAttribPointer(aNormal, 3, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, uvBuf);
+    gl.enableVertexAttribArray(aUV);
+    gl.vertexAttribPointer(aUV, 2, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, idxBuf);
+
+    // uniforms
+    gl.uniformMatrix4fv(uProj, false, proj);
+    gl.uniformMatrix4fv(uMV,   false, mv);
+    gl.uniform1f(uTzLon, tzLonRad);
+    gl.uniform1f(uTzHalfWidth, tzHalfRad);
+    gl.uniform1f(uTime, now);
+    gl.uniform1f(uYearPhase, yearPhase);
+
+    // posição sub-solar a partir do tempo UTC: 15°/h; meio-dia em
+    // Greenwich (UTC 12h) = sol em lon=0; UTC 18h = sol em lon=-90°.
+    const utcHours = (Date.now() / 3600000) % 24;
+    const subSolarLon = -((utcHours - 12) * 15) * Math.PI / 180;
+    // declinação solar: ±23,5° conforme a época do ano (yearPhase 0..1)
+    const subSolarLat = 23.5 * Math.PI / 180 * Math.sin(yearPhase * 2 * Math.PI);
+    // direção do sol em coords geográficas (model-space), convenção
+    // lon=0 ↔ +Z, leste ↔ +X — mesma usada por makeSphere.
+    gl.uniform3f(uSunDirGeo,
+      Math.cos(subSolarLat) * Math.sin(subSolarLon),  // x = cos(lat)*sin(lon)
+      Math.sin(subSolarLat),                            // y = sin(lat)
+      Math.cos(subSolarLat) * Math.cos(subSolarLon));  // z = cos(lat)*cos(lon)
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.uniform1i(uTex, 0);
+
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, texNight);
+    gl.uniform1i(uTexNight, 1);
+
+    gl.drawElements(gl.TRIANGLES, idxLen, gl.UNSIGNED_SHORT, 0);
+  }
+  requestAnimationFrame(frame);
+
+  // ─────────────────────────────────────────────────────────────────
+  //  clock
+  // ─────────────────────────────────────────────────────────────────
+  const timeEl = document.getElementById('time');
+  const dateEl = document.getElementById('date');
+  const tzEl   = document.getElementById('timezone');
+
+  function tick() {
+    const n   = new Date();
+    const pad = v => String(v).padStart(2, '0');
+    timeEl.textContent = `${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
+    dateEl.textContent =
+      `${WEEKDAYS[n.getDay()]}, ${n.getDate()} de ${MONTHS[n.getMonth()]} de ${n.getFullYear()}`;
+    const off  = -n.getTimezoneOffset() / 60;
+    const sign = off >= 0 ? '+' : '';
+    const iana = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    tzEl.textContent = `${iana} · UTC${sign}${off}`;
+  }
+  tick();
+  setInterval(tick, 1000);
+
+}());
+</script>
+</body>
+    <script>
+        console.log('I Love You S2');
+        console.log('Me to S2');
+    </script>
+</html>
