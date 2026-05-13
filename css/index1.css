@@ -1,0 +1,54 @@
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #030d1a; }
+canvas { display: block; }
+
+#hud {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+#clock-box {
+  text-align: center;
+  padding: 28px 52px;
+  border-radius: 20px;
+  background: rgba(3, 13, 26, 0.30);
+  backdrop-filter: blur(8px) saturate(1.4);
+  border: 1px solid rgba(100, 180, 255, 0.20);
+  box-shadow:
+	0 0 60px rgba(40, 110, 255, 0.12),
+	inset 0 0 30px rgba(40, 110, 255, 0.05);
+}
+
+#time {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: clamp(3rem, 9vw, 6.5rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #e8f4ff;
+  text-shadow:
+	0 0  8px rgba(110, 200, 255, 1.0),
+	0 0 22px rgba( 80, 170, 255, 0.8),
+	0 0 55px rgba( 50, 140, 255, 0.5),
+	0 0 95px rgba( 30, 100, 255, 0.3);
+}
+
+#date {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: clamp(0.85rem, 2.2vw, 1.15rem);
+  color: rgba(160, 215, 255, 0.80);
+  margin-top: 10px;
+  text-shadow: 0 0 14px rgba(100, 200, 255, 0.5);
+  letter-spacing: 0.05em;
+}
+
+#timezone {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: clamp(0.7rem, 1.6vw, 0.9rem);
+  color: rgba(110, 175, 235, 0.60);
+  margin-top: 6px;
+  letter-spacing: 0.04em;
+}
